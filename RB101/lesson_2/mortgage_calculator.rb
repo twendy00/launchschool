@@ -1,4 +1,3 @@
-
 puts "Welcome to the loan calculator!"
 puts "We will calculate your monthly payment for your car loan or mortgage."
 
@@ -6,7 +5,7 @@ puts "We will calculate your monthly payment for your car loan or mortgage."
 def input_valid(user_input)
   if /[[:digit:]]/.match(user_input)
     true
-  else 
+  else
     puts "Invalid input. Please enter a number greater than 0."
     false
   end
@@ -16,7 +15,7 @@ def input_not_neg(user_input)
   if user_input < 0
     puts "Only positive numbers are allowed. Please try again."
     false
-  else 
+  else
     true
   end
 end
@@ -25,14 +24,14 @@ def input_not_zero(user_input)
   if user_input == 0
     puts "Input must be a number greater than 0. Please try again."
     false
-  else 
+  else
     true
   end
 end
 
 # Obtain & validate loan amount
 loan_amount = ''
-loop do 
+loop do
   puts "How much is your loan amount?"
   loan_amount = gets.chomp
    
@@ -61,8 +60,8 @@ loop do
   loan_term_years = ''
   remaining_loan_term_months = ''
 
-  loop do 
-    puts "How many years do you have on your loan? You will be able to enter in the months after this."
+  loop do
+    puts "How many years do you have on your loan?"
     loan_term_years = gets.chomp
 
     next unless input_valid(loan_term_years)
@@ -86,7 +85,7 @@ loop do
 
   if loan_term_months == 0
     puts "Your loan duration must be at least 1 month. Please try again."
-  else  
+  else
     break
   end
 end
@@ -94,19 +93,14 @@ end
 # Calculate monthly payment
 apr_decimal = apr_percent / 100
 monthly_interest_rate = apr_decimal / 12
-monthly_payment = loan_amount * (monthly_interest_rate / (1 - (1 + monthly_interest_rate)**(-loan_term_months)))
+monthly_payment = (loan_amount * (monthly_interest_rate / 
+                  (1 - (1 + monthly_interest_rate)**(-loan_term_months)))
+monthly_payment = monthly_payment.round(2)
 
 puts "Loan Amount: $#{loan_amount}"
 puts "Monthly Interest Rate: #{monthly_interest_rate * 100}%"
 puts "Loan Duration in Months: #{loan_term_months}"
-puts "Monthly Payment: $#{monthly_payment}" 
+puts "Monthly Payment: $#{monthly_payment}"
 
 puts "You will have a monthly payment of $#{monthly_payment}."
 puts "Good-bye!"
-
-
-
-
-
-
-  
