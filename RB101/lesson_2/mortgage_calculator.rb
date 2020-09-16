@@ -34,7 +34,7 @@ loan_amount = ''
 loop do
   puts "How much is your loan amount?"
   loan_amount = gets.chomp
-   
+
   next unless input_valid(loan_amount)
   loan_amount = loan_amount.to_f
   next unless input_not_neg(loan_amount)
@@ -93,8 +93,8 @@ end
 # Calculate monthly payment
 apr_decimal = apr_percent / 100
 monthly_interest_rate = apr_decimal / 12
-monthly_payment = (loan_amount * (monthly_interest_rate / 
-                  (1 - (1 + monthly_interest_rate)**(-loan_term_months)))
+monthly_payment = (loan_amount * (monthly_interest_rate /
+                  (1 - (1 + monthly_interest_rate)**(-loan_term_months))))
 monthly_payment = monthly_payment.round(2)
 
 puts "Loan Amount: $#{loan_amount}"
