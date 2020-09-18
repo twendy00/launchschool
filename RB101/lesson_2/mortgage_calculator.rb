@@ -1,28 +1,60 @@
-puts "Welcome to the loan calculator!"
-puts "We will calculate your monthly payment for your car loan or mortgage."
+# to_i and to_f functions?
+# substitute prompts for yaml file
+# rubocop & upload
+
+require 'yaml'
+MESSAGES = YAML.load_file('mortgage_calculator_messages.yml')
+LANGUAGE = 'en'
+
+def messages(message, lang='en')
+  MESSAGES[lang][message]
+end
+
+def prompt(key)
+  message = messages(key, LANGUAGE)
+  Kernel.puts("#{message}")
+end
 
 # Methods to validate user inputs
-def input_valid(user_input)
+def input_valid?(user_input)
   if /[[:digit:]]/.match(user_input)
     true
   else
-    puts "Invalid input. Please enter a number greater than 0."
+    prompt('invalid_input')
     false
   end
 end
 
-def input_not_neg(user_input)
+def input_neg?(user_input)
   if user_input < 0
-    puts "Only positive numbers are allowed. Please try again."
+    prompt('only_positive')
     false
   else
     true
   end
 end
 
-def input_not_zero(user_input)
+def input_nonzero?(user_input)
   if user_input == 0
-    puts "Input must be a number greater than 0. Please try again."
+    prompt('only_nonzero')
+    false
+  else
+    true
+  end
+end
+
+def is_integer?(user_input)
+  if user_input.to_i.to_s == user_input
+    return true
+  else
+    prompt('only_whole_num')
+    false
+  end
+end
+
+def valid_12_months?(user_input)
+  if user_input > 12
+    prompt('valid_12_months')
     false
   else
     true
@@ -30,77 +62,128 @@ def input_not_zero(user_input)
 end
 
 # Obtain & validate loan amount
-loan_amount = ''
-loop do
-  puts "How much is your loan amount?"
-  loan_amount = gets.chomp
-
-  next unless input_valid(loan_amount)
-  loan_amount = loan_amount.to_f
-  next unless input_not_neg(loan_amount)
-  next unless input_not_zero(loan_amount)
-  break
-end
-
-# Obtain & validate APR
-apr_percent = ''
-loop do
-  puts "What is the APR% on your loan?"
-  apr_percent = gets.chomp
-
-  next unless input_valid(apr_percent)
-  apr_percent = apr_percent.to_f
-  next unless input_not_neg(apr_percent)
-  break
-end
-
-# Obtain & validate loan duration
-loan_term_months = ''
-loop do
-  loan_term_years = ''
-  remaining_loan_term_months = ''
-
+def get_loan_amount
+  loan_amount = 0
   loop do
-    puts "How many years do you have on your loan?"
+    prompt('get_loan_amount')
+    loan_amount = gets.chomp
+  
+    next unless input_valid?(loan_amount)
+    loan_amount = loan_amount.to_f
+    next unless input_neg?(loan_amount)
+    next unless input_nonzero?(loan_amount)
+    break
+  end
+  loan_amount
+end
+
+# Obtain & validate apr 
+def get_apr
+  monthly_interest_rate = 0
+  loop do
+    prompt('get_apr')
+    apr_percent = gets.chomp
+
+    next unless input_valid?(apr_percent)
+    apr_percent = apr_percent.to_f
+    next unless input_neg?(apr_percent)
+    next unless input_nonzero?(apr_percent)
+    apr_decimal = apr_percent / 100
+    monthly_interest_rate = (apr_decimal / 12)
+    break
+  end
+  monthly_interest_rate
+end
+
+# Obtain & validate loan term in years
+def get_loan_term_years
+  loan_term_years = 0
+  loop do
+    prompt('get_loan_years')
     loan_term_years = gets.chomp
 
-    next unless input_valid(loan_term_years)
-    loan_term_years = loan_term_years.to_f
-    next unless input_not_neg(loan_term_years)
+    next unless input_valid?(loan_term_years)
+    next unless is_integer?(loan_term_years)
+    loan_term_years = loan_term_years.to_i
+    next unless input_neg?(loan_term_years)
     break
   end
+  loan_term_years
+end
 
+# Obtain & validate loan term in months
+def get_loan_term_months
+  loan_term_months = 0
   loop do
-    puts "How many months do you have on your loan?"
-    remaining_loan_term_months = gets.chomp
+    prompt('get_loan_months')
+    loan_term_months = gets.chomp
 
-    next unless input_valid(remaining_loan_term_months)
-    remaining_loan_term_months = remaining_loan_term_months.to_f
-    next unless input_not_neg(remaining_loan_term_months)
+    next unless input_valid?(loan_term_months)
+    next unless is_integer?(loan_term_months)
+    loan_term_months = loan_term_months.to_i
+    next unless input_neg?(loan_term_months)
+    next unless valid_12_months?(loan_term_months)
     break
   end
+  loan_term_months
+end
 
-  loan_term_years_to_months = loan_term_years * 12
-  loan_term_months = loan_term_years_to_months + remaining_loan_term_months
+# Calculate & validate loan duration
+def get_loan_duration()
+  total_loan_term_months = 0
+  loop do
+    loan_term_years = get_loan_term_years()
+    loan_term_months = get_loan_term_months()
+    total_loan_term_months = (loan_term_years * 12) + loan_term_months
 
-  if loan_term_months == 0
-    puts "Your loan duration must be at least 1 month. Please try again."
-  else
-    break
+    if total_loan_term_months == 0
+      prompt('invalid_loan_term')
+    else
+      break
+    end
   end
+  total_loan_term_months
 end
 
 # Calculate monthly payment
-apr_decimal = apr_percent / 100
-monthly_interest_rate = apr_decimal / 12
-monthly_payment = (loan_amount * (monthly_interest_rate /
-                  (1 - (1 + monthly_interest_rate)**(-loan_term_months))))
-monthly_payment = monthly_payment.round(2)
+def calc_monthly_payment(loan_amount, monthly_interest_rate, loan_term_months)
+  monthly_payment = (loan_amount * (monthly_interest_rate / 
+                    (1 - (1 + monthly_interest_rate)**(-loan_term_months))))
+  monthly_payment = monthly_payment.round(2)
+end
 
-puts "Loan Amount: $#{loan_amount}"
-puts "Monthly Interest Rate: #{monthly_interest_rate * 100}%"
-puts "Loan Duration in Months: #{loan_term_months}"
-puts "Monthly Payment: $#{monthly_payment}"
+def perform_calc_again
+  loop do
+    perform_calc_again = gets.chomp.downcase
 
-puts "You will have a monthly payment of $#{monthly_payment}."
-puts "Good-bye!"
+    if perform_calc_again == 'n'
+      return false
+    elsif perform_calc_again == 'y'
+      return true
+    else
+      prompt('invalid_calc_again')
+    end
+  end
+end
+
+# Execute
+prompt('welcome')
+prompt ('program_desc')
+
+loop do 
+  loan_amount = get_loan_amount()
+  monthly_interest_rate = get_apr()
+  loan_term_months = get_loan_duration()
+  monthly_payment = calc_monthly_payment(loan_amount, monthly_interest_rate, loan_term_months)
+
+
+  puts "Loan Amount: $#{loan_amount}"
+  puts "Monthly Interest Rate: #{(monthly_interest_rate * 100).round(2)}%"
+  puts "Loan Duration in Months: #{loan_term_months}"
+  puts "Monthly Payment: $#{monthly_payment}"
+  puts "You will have a monthly payment of $#{monthly_payment}."
+
+  prompt('perform_calc_again')
+  break unless perform_calc_again()
+end
+prompt('bye')
