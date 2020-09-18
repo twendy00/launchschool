@@ -8,11 +8,11 @@ end
 
 def prompt(key)
   message = messages(key, LANGUAGE)
-  Kernel.puts("#{message}")
+  Kernel.puts("=> #{message}")
 end
 
 # Methods to validate user inputs
-def input_valid?(user_input)
+def input_valid(user_input)
   if /[[:digit:]]/.match(user_input)
     true
   else
@@ -21,7 +21,7 @@ def input_valid?(user_input)
   end
 end
 
-def input_neg?(user_input)
+def input_neg(user_input)
   if user_input < 0
     prompt('only_positive')
     false
@@ -30,7 +30,7 @@ def input_neg?(user_input)
   end
 end
 
-def input_nonzero?(user_input)
+def input_nonzero(user_input)
   if user_input == 0
     prompt('only_nonzero')
     false
@@ -39,16 +39,18 @@ def input_nonzero?(user_input)
   end
 end
 
-def is_integer?(user_input)
+def valid_integer(user_input)
+  is_valid = false
   if user_input.to_i.to_s == user_input
-    return true
+    is_valid = true
   else
     prompt('only_whole_num')
-    false
+    is_valid = false
   end
+  is_valid
 end
 
-def valid_12_months?(user_input)
+def valid_12_months(user_input)
   if user_input > 12
     prompt('valid_12_months')
     false
@@ -63,27 +65,27 @@ def get_loan_amount
   loop do
     prompt('get_loan_amount')
     loan_amount = gets.chomp
-  
-    next unless input_valid?(loan_amount)
+
+    next unless input_valid(loan_amount)
     loan_amount = loan_amount.to_f
-    next unless input_neg?(loan_amount)
-    next unless input_nonzero?(loan_amount)
+    next unless input_neg(loan_amount)
+    next unless input_nonzero(loan_amount)
     break
   end
   loan_amount
 end
 
-# Obtain & validate apr 
+# Obtain & validate apr
 def get_apr
   monthly_interest_rate = 0
   loop do
     prompt('get_apr')
     apr_percent = gets.chomp
 
-    next unless input_valid?(apr_percent)
+    next unless input_valid(apr_percent)
     apr_percent = apr_percent.to_f
-    next unless input_neg?(apr_percent)
-    next unless input_nonzero?(apr_percent)
+    next unless input_neg(apr_percent)
+    next unless input_nonzero(apr_percent)
     apr_decimal = apr_percent / 100
     monthly_interest_rate = (apr_decimal / 12)
     break
@@ -98,10 +100,10 @@ def get_loan_term_years
     prompt('get_loan_years')
     loan_term_years = gets.chomp
 
-    next unless input_valid?(loan_term_years)
-    next unless is_integer?(loan_term_years)
+    next unless input_valid(loan_term_years)
+    next unless valid_integer(loan_term_years)
     loan_term_years = loan_term_years.to_i
-    next unless input_neg?(loan_term_years)
+    next unless input_neg(loan_term_years)
     break
   end
   loan_term_years
@@ -114,18 +116,18 @@ def get_loan_term_months
     prompt('get_loan_months')
     loan_term_months = gets.chomp
 
-    next unless input_valid?(loan_term_months)
-    next unless is_integer?(loan_term_months)
+    next unless input_valid(loan_term_months)
+    next unless valid_integer(loan_term_months)
     loan_term_months = loan_term_months.to_i
-    next unless input_neg?(loan_term_months)
-    next unless valid_12_months?(loan_term_months)
+    next unless input_neg(loan_term_months)
+    next unless valid_12_months(loan_term_months)
     break
   end
   loan_term_months
 end
 
 # Calculate & validate loan duration
-def get_loan_duration()
+def get_loan_duration
   total_loan_term_months = 0
   loop do
     loan_term_years = get_loan_term_years()
@@ -143,9 +145,7 @@ end
 
 # Calculate monthly payment
 def calc_monthly_payment(loan_amount, monthly_interest_rate, loan_term_months)
-  monthly_payment = (loan_amount * (monthly_interest_rate / 
-                    (1 - (1 + monthly_interest_rate)**(-loan_term_months))))
-  monthly_payment = monthly_payment.round(2)
+  (loan_amount * (monthly_interest_rate / (1 - (1 + monthly_interest_rate)**(-loan_term_months)))).round(2)
 end
 
 def perform_calc_again
@@ -164,14 +164,14 @@ end
 
 # Execute
 prompt('welcome')
-prompt ('program_desc')
+prompt('program_desc')
 
-loop do 
+loop do
   loan_amount = get_loan_amount()
   monthly_interest_rate = get_apr()
   loan_term_months = get_loan_duration()
-  monthly_payment = calc_monthly_payment(loan_amount, monthly_interest_rate, loan_term_months)
-
+  monthly_payment =
+    calc_monthly_payment(loan_amount, monthly_interest_rate, loan_term_months)
 
   puts "Loan Amount: $#{loan_amount}"
   puts "Monthly Interest Rate: #{(monthly_interest_rate * 100).round(2)}%"
