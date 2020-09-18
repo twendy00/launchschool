@@ -1,7 +1,3 @@
-# to_i and to_f functions?
-# substitute prompts for yaml file
-# rubocop & upload
-
 require 'yaml'
 MESSAGES = YAML.load_file('mortgage_calculator_messages.yml')
 LANGUAGE = 'en'
