@@ -17,6 +17,11 @@ VALID_PLAY_AGAIN_ANSWERS = %w(yes no)
 VALID_PLAY_AGAIN_ANSWERS_ABBREVIATED = { 'y' => 'yes',
                                          'n' => 'no' }
 
+GAME_ROUNDS = 5
+
+score = { player: 0,
+          computer: 0 }
+
 def prompt(message)
   Kernel.puts("=> #{message}")
 end
@@ -29,42 +34,42 @@ def winning_move?(first, second)
   WINNING_LOGIC[first].include?(second)
 end
 
-def game_winner(player, computer)
+def game_winner(player,computer)
   if winning_move?(player, computer)
-    "You won!"
+    "Player"
   elsif winning_move?(computer, player)
-    "Computer won!"
-  else
-    "It's a tie!"
+    "Computer"
   end
 end
 
-def increment_user_wins(result, user)
-  if result == "You won!"
-    user + 1
+def display_game_winner_message(winner)
+  if winner == "Player"
+    prompt("You won!")
+  elsif winner == "Computer"
+    prompt("Computer won!")
   else
-    user
+    prompt("It's a tie!")
   end
 end
 
-def increment_computer_wins(result, computer)
-  if result == "Computer won!"
-    computer + 1
-  else
-    computer
+def increment_wins(winner, score)
+  if winner == "Player"
+    score[:player] += 1
+  elsif winner == "Computer"
+    score[:computer] += 1
   end
-end
+end 
 
-def display_score(user_wins, computer_wins)
-  prompt("User's Score: #{user_wins}")
-  prompt("Computer's Score: #{computer_wins}")
+def display_score(score)
+  prompt("User's Score: #{score[:player]}")
+  prompt("Computer's Score: #{score[:computer]}")
 end
 
 def display_match_outcome(user, computer)
   if user > computer
-    prompt("You won the match by winning 5 games first. Good job!")
+    prompt("You won the match by winning #{GAME_ROUNDS} games first. Good job!")
   else
-    print("=> The computer won the match by winning 5 games first. ")
+    print("=> The computer won the match by winning #{GAME_ROUNDS} games first. ")
     puts("Better luck next time!")
   end
 end
@@ -92,12 +97,13 @@ def valid_play_again_choice?(choice)
 end
 
 prompt("Welcome to the rock, paper, scissors, lizard, spock game!")
+prompt("The first player to win #{GAME_ROUNDS} wins the match.")
 sleep(2)
 clear_screen()
 
 loop do
-  user_wins = 0
-  computer_wins = 0
+  score[:player] = 0
+  score[:computer] = 0
   play_again_answer = ''
 
   loop do
@@ -105,6 +111,7 @@ loop do
 
     loop do
       prompt("Choose one: #{VALID_CHOICES.join(', ')}")
+      prompt("You may also select from one of these abbreviations #{VALID_CHOICES_ABBREVIATED.keys}")
       user_choice = Kernel.gets().chomp()
       user_choice = validate_choice(user_choice)
       break if user_choice
@@ -113,17 +120,16 @@ loop do
     computer_choice = VALID_CHOICES.sample
     prompt("You chose: #{user_choice}. Computer chose: #{computer_choice}.")
 
-    result = game_winner(user_choice, computer_choice)
-    prompt(result)
-    user_wins = increment_user_wins(result, user_wins)
-    computer_wins = increment_computer_wins(result, computer_wins)
-    display_score(user_wins, computer_wins)
+    winner = game_winner(user_choice, computer_choice)
+    display_game_winner_message(winner)
+    increment_wins(winner, score)
+    display_score(score)
     sleep(3)
     clear_screen()
-    break if user_wins >= 5 || computer_wins >= 5
+    break if score[:player] >= GAME_ROUNDS || score[:computer] >= GAME_ROUNDS
   end
 
-  display_match_outcome(user_wins, computer_wins)
+  display_match_outcome(score[:player], score[:computer])
 
   loop do
     prompt("Do you want to play again?")
