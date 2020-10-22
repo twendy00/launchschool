@@ -1,0 +1,82 @@
+1. What would you expect the code below to print out?
+numbers = [1, 2, 2, 3]
+numbers.uniq
+
+puts numbers
+1
+2
+2
+3
+
+2. Describe the difference between ! and ? in Ruby. 
+And explain what would happen in the following scenarios:
+what is != and where should you use it?
+  != evaluates whether the left and right parameters are not equal to each other. 
+  It should be used in conditionals. 
+put ! before something, like !user_name
+  Turns an object into the opposite of their boolean equivalent.
+  A single bang used before something that is truthy will return a false. 
+  If an object is not truthy, and the single bang is used before it, then it will return true.
+put ! after something, like words.uniq!
+  This is part of the method name. 
+  We can't infer what the method is doing based on the last character.
+put ? before something
+  ? : 
+  This is the ternary operator for if...else
+put ? after something
+  This is part of the method name.
+  We can't infer what the method is doing based on the last character.
+put !! before something, like !!user_name
+  Turns an object into their boolean equivalent.
+  A double bang before something will return true if the object is truthy. 
+  If the object is not truthy, then it will return false. 
+
+3. Replace the word "important" with "urgent" in this string:
+advice = "Few things in life are as important as house training your pet dinosaur."
+advice.gsub!('important', 'urgent')
+
+4. The Ruby Array class has several methods for removing items from the array. 
+Two of them have very similar names. Let's see how they differ:
+numbers = [1, 2, 3, 4, 5]
+What do the following method calls do (assume we reset numbers to the original array between method calls)?
+numbers.delete_at(1) 
+  Will delete the value at the index 1, so 2 will be deleted. Modifies the array.
+numbers.delete(1)
+  Will delete all occurrences that have the value of 1, so 1 will be deleted. 
+  Modifies the array.
+
+5. Programmatically determine if 42 lies between 10 and 100.
+hint: Use Ruby's range object in your solution.
+(10..100).cover?(42)
+
+6. Show two different ways to put the expected "Four score and " in front of the following string:
+famous_words = "seven years ago..."
+Method 1
+prefix = "Four score and "
+famous_words.insert(0, prefix)
+Method 2
+quote = []
+quote << prefix
+quote << famous_words
+Other Methods
+famous_words.unshift(prefix)
+"Four score and " + famous_words
+
+7. If we build an array like this:
+flintstones = ["Fred", "Wilma"]
+flintstones << ["Barney", "Betty"]
+flintstones << ["BamBam", "Pebbles"]
+We will end up with this "nested" array:
+["Fred", "Wilma", ["Barney", "Betty"], ["BamBam", "Pebbles"]]
+Make this into an un-nested array.
+flintstones.flatten!
+
+8. Turn the hash below into an array containing only two elements: 
+Barney's name and Barney's number
+
+flintstones = { "Fred" => 0, "Wilma" => 1, "Barney" => 2, "Betty" => 3, "BamBam" => 4, "Pebbles" => 5 }
+barney = ["Barney"]
+barney << flintstones.fetch("Barney")
+
+flintstones.assoc("Barney")
+#=> ["Barney", 2]
