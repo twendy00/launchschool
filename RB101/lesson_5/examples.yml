@@ -1,0 +1,106 @@
+
+Example 2: 
+[[1, 2], [3, 4]].map do |arr|
+  puts arr.first
+end
+# 1
+# 3
+# => [nil, nil]
+
+The Array#map method is being invoked by the multi-dimenstional/nested array 
+[[1, 2], [3, 4]]. Each inner array is passed to the block in turn and assigned 
+to the local variable arr. The Array#first method is called on arr and returns
+the object at index 0 of the current array -- in this case integers 1 and 3, 
+respectively. The puts method then takes the return value of Array#first and 
+outputs a string representation of the integer. puts returns nils, and since 
+this is the last evaluated statement inside the block, the block's return value
+is nil. map returns a new array with each element being the block's return value. 
+Thus, map returns [nil, nil]. 
+
+Example 3:
+[[1, 2], [3, 4]].map do |arr|
+  puts arr.first
+  arr.first
+end
+
+The Array#map method is being invoked by the multi-dimensional/nexted array
+of [[1, 2], [3, 4]]. Each inner array is passed to the block to be assigned
+to the local variable arr in turn. The Array#first method is called on arr 
+and returns the object located at the 0 index of the current sub-array. In 
+this example, first will return 1 and 3, respectively. The puts method then
+outputs a string representation of the integers and returns nil. On the next
+line, the Array#first method is called again on arr, and similar to the above, 
+it returns the object that is located at the 0 index of the current sub-array, 
+which will be 1 and 3. Since this is the last line that's executed inside the
+block, the return value of Array#first will become the return value of the block.
+Array#map then uses the return values of the block and stores them inside a new
+array. Thus, map returns [1, 3]. 
+
+Example 4:
+my_arr = [[18, 7], [3, 12]].each do |arr|
+  arr.each do |num|
+    if num > 5
+      puts num
+    end
+  end
+end
+
+In the first line, my_arr is a variable that is instantiated and assigned to the 
+return value of the Array#each method that is invoked by the multidimensional/
+nested array [[18, 7], [3, 12]]. Array#each iterates through sub-array inside the
+outer array by passing each sub-array to the arr parameter. In the second line,
+Array#each is called again by each sub-array. The individual integer elements inside
+each sub-array are passed to the num parameter. In the third line, each integer element
+is evaluated by the comparison > 5 and the comparison operator returns the Boolean value
+true or false. If true, the conditional "if" moves to the next line, and the puts 
+method prints out the string representation of the integer and returns nil. 
+However, if the integer element is less than 5, the comparison statement returns false 
+and skips the remaining conditional block -- puts is not executed. The conditional block then
+returns nil and passes it to the inner block's execution from the second Array#each. The second 
+Array#each method does not use the block's return value though and returns the original sub-arrays 
+that invoked it, which becomes the return value of the outer block. The first Array#each method
+also does not use the second Array#each's return value and instead, returns the original outer
+array that invoked it. This value is assigned to my_arr. 
+
+Example 5:
+[[1, 2], [3, 4]].map do |arr|
+  arr.map do |num|
+    num * 2
+  end
+end
+
+Array#map is invoked by the multi-dimensional/nested array. Each sub-array is passed
+to the arr parameter of the outer execution block. In the next line, the Array#map method is 
+called again on each sub-array, and each integer element inside the sub-array is passed
+as an argument to the num parameter of the inner execution block. Inside the execution block, 
+each element of the sub-array is multiplied by 2 and the result is returned for every iteration
+of the inner execution block. The inner Array#map stores the return results from the inner execution
+block inside a new array. The outer execution block then returns each of the inner Array#map's new 
+arrays, which are the sub-arrays for the final array. Map then returns the final nested array of 
+[[2, 4], [6, 8]]
+
+Example 6:
+[{ a: 'ant', b: 'elephant' }, { c: 'cat' }].select do |hash|
+  hash.all? do |key, value|
+    value[0] == key.to_s
+  end
+end
+# => [{ :c => "cat" }]
+
+Array#select is invoked by the nested array that contains 2 hashes. In the outer execution block,
+each sub-hash is passed as an argument to the hash parameter. For each iteration of the
+execution block, the sub-hash calls the Hash#all? method, which returns true or false if the 
+block returns a truthy value for all elements inside the collection. Inside the inner execution
+block, each key and value pair are passed in as values. The String#[] method returns the character
+located at the 0 index position for the applicable value in the hash. The Symbol#to_s method 
+converts the relevant key to a string. The Comparable#== compares the two return values from the
+String#[] and Symbol#to_s methods and returns the Boolean value true or false. The Comparable#=='s 
+return value is the return value for each iteration of the inner execution block. The inner 
+execution block's return value is then used by the Hash#all? method. Since the first hash had one
+key-value pair that returned false from the inner execution block, Hash#all? returns false for
+the first sub-hash and true for the second sub-hash. Hash#all?'s return value is used as the outer
+execution block's return value. Hash#select determines which values to select based on the truthiness
+of the return value of the block. Since the second sub-hash returned true, the sub-hash is returned
+inside a new array by the select method. 
+
+Example 7:
