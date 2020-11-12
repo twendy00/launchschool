@@ -158,7 +158,6 @@ def computer_places_piece!(brd)
     else
       empty_squares(brd).sample
     end
-  sleep(2)
 
   brd[square] = COMPUTER_MARKER
 end
@@ -188,9 +187,9 @@ def detect_winner(brd)
   nil
 end
 
-def update_score!(score, brd)
-  if score[detect_winner(brd)]
-    score[detect_winner(brd)] += 1
+def update_score!(score, brd, winner)
+  if score[winner]
+    score[winner] += 1
   else
     score['Tied Games'] += 1
   end
@@ -244,7 +243,9 @@ loop do
     end
     sleep(3)
 
-    update_score!(score, board)
+    winner = detect_winner(board)
+
+    update_score!(score, board, winner)
 
     if score["Player"] >= WINS || score["Computer"] >= WINS
       declare_match_winner(score)
