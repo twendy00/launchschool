@@ -5,6 +5,8 @@
 #   Are method names clear?
 #   Is overall program clear?
 
+# Show instructions
+
 INITIAL_DECK = [['C', '2'], ['C', '3'], ['C', '4'], ['C', '5'], ['C', '6'],
                 ['C', '7'], ['C', '8'], ['C', '9'], ['C', '10'], ['C', 'J'],
                 ['C', 'Q'], ['C', 'K'], ['C', 'A'], # clubs
@@ -20,6 +22,10 @@ INITIAL_DECK = [['C', '2'], ['C', '3'], ['C', '4'], ['C', '5'], ['C', '6'],
 POSSIBLE_MOVES = %w(hit stay h s)
 card_status = { 'Player': 0, 'Dealer': 0 }
 deck = []
+
+def clear
+  system('clear') || system('clr')
+end
 
 def prompt(msg)
   puts "=> #{msg}"
@@ -41,11 +47,11 @@ def deal_cards(deck)
   return player_cards, dealer_cards
 end
 
-def show_player_cards(cards)
-  prompt("Your cards are: #{cards}")
+def show_cards(cards)
+  prompt("Cards in hand: #{cards}")
 end
 
-def show_dealer_card(card)
+def reveal_dealer_card(card)
   revealed_card = card.sample(1).flatten!
   prompt("One of the dealer's cards is: #{revealed_card}")
 end
@@ -72,31 +78,6 @@ def deal_another_card(cards, deck)
   delete_cards_from_deck(new_card, deck)
 end
 
-def ace_in_hand?(cards)
-  flattened_cards = cards.flatten
-  flattened_cards.include?('A')
-end
-
-def calculate_card_values(card_values)
-  card_values.sum
-end
-
-def bust?(card_values)
-  total_value = calculate_card_values(card_values)
-  total_value > 21
-end
-
-def change_ace_value(card_values)
-  counter = 0
-  loop do
-    if bust?(card_values) && card_values[counter] == 11
-      card_values[counter] = 1
-    end
-    counter += 1
-    break if counter >= card_values.size
-  end
-end
-
 def get_card_values(cards)
   card_values = []
   cards.each do |card|
@@ -111,8 +92,28 @@ def get_card_values(cards)
   card_values
 end
 
-def display_card_total(user, card_values)
-  prompt("#{user} cards total: #{card_values.sum}")
+def calculate_card_total(card_values)
+  card_values.sum
+end
+
+def bust?(card_values)
+  total_value = calculate_card_total(card_values)
+  total_value > 21
+end
+
+def change_ace_value(card_values)
+  counter = 0
+  loop do
+    if bust?(card_values) && card_values[counter] == 11
+      card_values[counter] = 1
+    end
+    counter += 1
+    break if counter >= card_values.size
+  end
+end
+
+def display_card_total(card_values)
+  prompt("Card total: #{card_values.sum}")
 end
 
 def dealer_hits?(card_value)
@@ -126,12 +127,16 @@ end
 def identify_winner(card_status)
   if card_status['Player'] == 'Bust' && card_status['Dealer'] == 'Bust'
     'Everyone loses'
-  elsif card_status['Dealer'] == 'Bust' ||
-        (card_status['Player'] < card_status['Dealer'])
-    'Player'
-  elsif card_status['Dealer'] == 'Bust' ||
-        (card_status['Player'] > card_status['Dealer'])
+  elsif card_status['Player'] == 'Bust' &&
+        card_status['Dealer'] != 'Bust'
     'Dealer'
+  elsif card_status['Player'] != 'Bust' &&
+        card_status['Dealer'] == 'Bust'
+    'Player'
+  elsif card_status['Player'] > card_status['Dealer']
+    'Dealer'
+  elsif card_status['Player'] < card_status['Dealer']
+    'Player'
   else
     'Tie'
   end
@@ -143,9 +148,9 @@ def display_winner(card_status)
   when 'Everyone loses'
     prompt("You and the dealer both busted and lost!")
   when 'Player'
-    prompt("You are closer to 21 than the dealer. You win!")
+    prompt("You win!")
   when 'Dealer'
-    prompt("The dealer is closer to 21 than you. You lose!")
+    prompt("You lose!")
   when 'Tie'
     prompt("You both have the same number. It's a tie!")
   else
@@ -153,53 +158,68 @@ def display_winner(card_status)
   end
 end
 
+def display_final_results(cards, card_value)
+  show_cards(cards)
+  display_card_total(card_value)
+end
+
 # Execution
 deck = INITIAL_DECK
-p deck.size
-player_cards, dealer_cards = deal_cards(deck)
-p deck.size
 
-show_player_cards(player_cards)
-show_dealer_card(dealer_cards)
+prompt("Welcome to Twenty-One!")
+prompt("The player with the hand closest to 21 without going over wins.")
+prompt("You get to go first.")
+sleep(4)
+clear
+
+player_cards, dealer_cards = deal_cards(deck)
+
+show_cards(player_cards)
+reveal_dealer_card(dealer_cards)
 
 # Player's move
 user = 'Player'
 player_cards_value = get_card_values(player_cards)
 change_ace_value(player_cards_value)
-display_card_total(user, player_cards_value)
+display_card_total(player_cards_value)
 
-player_turn = get_player_turn
+player_turn = ask_player_turn
 
 loop do
+  clear
   case player_turn
   when 'stay' || 's'
     prompt("You've chosen to stay. The dealer will make their moves now.")
     break
   when 'hit' || 'h'
     deal_another_card(player_cards, deck)
-    show_player_cards(player_cards)
     player_cards_value = get_card_values(player_cards)
+    show_cards(player_cards)
     change_ace_value(player_cards_value)
-    display_card_total(user, player_cards_value)
+    display_card_total(player_cards_value)
     if bust?(player_cards_value)
       card_status[user] = 'Bust'
       prompt("You've busted and gone over 21. It's the dealer's turn now.")
       break
     end
-    player_turn = get_player_turn
+    player_turn = ask_player_turn
   end
 end
 
-total_player_cards = calculate_card_values(player_cards_value)
+total_player_cards = calculate_card_total(player_cards_value)
 distance_from_twenty_one(total_player_cards, user, card_status)
+sleep(3)
+clear
 
 # Dealer's move
+prompt("Dealer is making their moves....")
+sleep(3)
 user = 'Dealer'
 dealer_cards_value = get_card_values(dealer_cards)
 loop do
-  display_card_total(user, dealer_cards_value)
   if bust?(dealer_cards_value)
     card_status[user] = 'Bust'
+    prompt("The dealer busted!")
     break
   end
   break if dealer_hits?(dealer_cards_value)
@@ -208,7 +228,14 @@ loop do
   dealer_cards_value = get_card_values(dealer_cards)
 end
 
-total_dealer_cards = calculate_card_values(dealer_cards_value)
+total_dealer_cards = calculate_card_total(dealer_cards_value)
 distance_from_twenty_one(total_dealer_cards, user, card_status)
+sleep(3)
 
+clear
+prompt("Final Results:")
+prompt("Player's cards & total are: ")
+display_final_results(player_cards, player_cards_value)
+prompt("Dealer's cards & total are:")
+display_final_results(dealer_cards, dealer_cards_value)
 display_winner(card_status)
