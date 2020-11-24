@@ -1,12 +1,3 @@
-# Read through other TA comments
-# Refactor code
-#   Is anything repeated?
-#   Do any methods do more than one thing?
-#   Are method names clear?
-#   Is overall program clear?
-
-# Show instructions
-
 INITIAL_DECK = [['C', '2'], ['C', '3'], ['C', '4'], ['C', '5'], ['C', '6'],
                 ['C', '7'], ['C', '8'], ['C', '9'], ['C', '10'], ['C', 'J'],
                 ['C', 'Q'], ['C', 'K'], ['C', 'A'], # clubs
@@ -19,9 +10,10 @@ INITIAL_DECK = [['C', '2'], ['C', '3'], ['C', '4'], ['C', '5'], ['C', '6'],
                 ['S', '2'], ['S', '3'], ['S', '4'], ['S', '5'], ['S', '6'],
                 ['S', '7'], ['S', '8'], ['S', '9'], ['S', '10'], ['S', 'J'],
                 ['S', 'Q'], ['S', 'K'], ['S', 'A']] # spades
+WINNING_VALUE = 21
+DEALER_HITS = 17
+WINNING_GAMES = 5
 POSSIBLE_MOVES = %w(hit stay h s)
-card_status = { 'Player': 0, 'Dealer': 0 }
-deck = []
 
 def clear
   system('clear') || system('clr')
@@ -39,36 +31,25 @@ end
 
 def deal_cards(deck)
   player_cards = deck.sample(2)
-  dealer_cards = deck.sample(2)
-
   delete_cards_from_deck(player_cards, deck)
+  dealer_cards = deck.sample(2)
   delete_cards_from_deck(dealer_cards, deck)
 
   return player_cards, dealer_cards
 end
 
-def show_cards(cards)
-  prompt("Cards in hand: #{cards}")
-end
-
-def reveal_dealer_card(card)
-  revealed_card = card.sample(1).flatten!
-  prompt("One of the dealer's cards is: #{revealed_card}")
-end
-
 def ask_player_turn
   prompt("Would you like to hit or stay?")
-  turn = ''
+  move = ''
   loop do
-    turn = gets.chomp
-    break if valid_player_turn?(turn)
+    move = gets.chomp.downcase
+    break if valid_player_move?(move)
     prompt("That's not a valid option. Please enter hit or stay.")
   end
-  turn = turn.downcase
+  move
 end
 
-def valid_player_turn?(move)
-  move = move.downcase
+def valid_player_move?(move)
   POSSIBLE_MOVES.include?(move)
 end
 
@@ -78,13 +59,13 @@ def deal_another_card(cards, deck)
   delete_cards_from_deck(new_card, deck)
 end
 
-def get_card_values(cards)
+def store_card_values(cards)
   card_values = []
   cards.each do |card|
-    if card[1].to_i == 0 # For 'K', 'Q', 'J'
-      card_values.push(10)
-    elsif card[1] == 'A'
+    if card[1] == 'A'
       card_values.push(11)
+    elsif card[1].to_i == 0 # For 'K', 'Q', 'J'
+      card_values.push(10)
     else
       card_values.push(card[1].to_i)
     end
@@ -92,150 +73,171 @@ def get_card_values(cards)
   card_values
 end
 
-def calculate_card_total(card_values)
-  card_values.sum
+def bust?(total)
+  total > WINNING_VALUE
 end
 
-def bust?(card_values)
-  total_value = calculate_card_total(card_values)
-  total_value > 21
-end
-
-def change_ace_value(card_values)
+def change_ace_value(card_values, total)
   counter = 0
   loop do
-    if bust?(card_values) && card_values[counter] == 11
+    if bust?(total) && card_values[counter] == 11
       card_values[counter] = 1
     end
+    total = card_values.sum
     counter += 1
     break if counter >= card_values.size
   end
 end
 
-def display_card_total(card_values)
-  prompt("Card total: #{card_values.sum}")
+def process_moves(cards, turn)
+  card_values = store_card_values(cards)
+  prompt("Cards in hand: #{cards}") if turn == 'Player'
+  total = card_values.sum
+  change_ace_value(card_values, total)
+  total = card_values.sum
+  prompt("Card total: #{total}") if turn == 'Player'
+  total
 end
 
-def dealer_hits?(card_value)
-  card_value.sum >= 17
-end
-
-def distance_from_twenty_one(total_card_value, user, card_status)
-  card_status[user] = (21 - total_card_value) if card_status[user] != 'Bust'
-end
-
-def identify_winner(card_status)
-  if card_status['Player'] == 'Bust' && card_status['Dealer'] == 'Bust'
-    'Everyone loses'
-  elsif card_status['Player'] == 'Bust' &&
-        card_status['Dealer'] != 'Bust'
-    'Dealer'
-  elsif card_status['Player'] != 'Bust' &&
-        card_status['Dealer'] == 'Bust'
-    'Player'
-  elsif card_status['Player'] > card_status['Dealer']
-    'Dealer'
-  elsif card_status['Player'] < card_status['Dealer']
-    'Player'
+def identify_winner(player_total, dealer_total)
+  if player_total > WINNING_VALUE && dealer_total > WINNING_VALUE
+    :Everyone_loses
+  elsif player_total > WINNING_VALUE
+    :Dealer
+  elsif dealer_total > WINNING_VALUE
+    :Player
+  elsif (WINNING_VALUE - player_total) > (WINNING_VALUE - dealer_total)
+    :Dealer
+  elsif (WINNING_VALUE - player_total) < (WINNING_VALUE - dealer_total)
+    :Player
   else
-    'Tie'
+    :Tie
   end
 end
 
-def display_winner(card_status)
-  winner = identify_winner(card_status)
+def display_winner(winner)
   case winner
-  when 'Everyone loses'
-    prompt("You and the dealer both busted and lost!")
-  when 'Player'
-    prompt("You win!")
-  when 'Dealer'
-    prompt("You lose!")
-  when 'Tie'
-    prompt("You both have the same number. It's a tie!")
+  when :Everyone_loses
+    prompt("You and the dealer both lost this game!")
+  when :Player
+    prompt("You win this game!")
+  when :Dealer
+    prompt("You lose this game!")
+  when :Tie
+    prompt("You both have the same number. This game is a tie!")
   else
     prompt("Winner not recognizable. Error.")
   end
 end
 
-def display_final_results(cards, card_value)
-  show_cards(cards)
-  display_card_total(card_value)
+def ask_play_again
+  answer = ''
+  prompt("Would you like to play another match?")
+  loop do
+    answer = gets.chomp.downcase
+    break if %w(yes no y n).include?(answer)
+    prompt("That's not a valid answer. Please enter yes or no.")
+  end
+  answer
+end
+
+def process_end_game(player_cards, player_total, dealer_cards,
+                     dealer_total, score)
+  clear
+  prompt("Final Results:")
+  prompt("Player's cards: #{player_cards} & player's total: #{player_total}.")
+  prompt("Dealer's cards: #{dealer_cards} & dealer's total: #{dealer_total}.")
+  winner = identify_winner(player_total, dealer_total)
+  display_winner(winner)
+  score[winner] += 1 if score[winner]
+  puts ""
+
+  prompt("Player's Score: #{score[:Player]}")
+  prompt("Dealer's Score: #{score[:Dealer]}")
+  sleep(5)
+  clear
 end
 
 # Execution
-deck = INITIAL_DECK
-
-prompt("Welcome to Twenty-One!")
-prompt("The player with the hand closest to 21 without going over wins.")
-prompt("You get to go first.")
-sleep(4)
-clear
-
-player_cards, dealer_cards = deal_cards(deck)
-
-show_cards(player_cards)
-reveal_dealer_card(dealer_cards)
-
-# Player's move
-user = 'Player'
-player_cards_value = get_card_values(player_cards)
-change_ace_value(player_cards_value)
-display_card_total(player_cards_value)
-
-player_turn = ask_player_turn
-
 loop do
+  score = { Player: 0, Dealer: 0 }
   clear
-  case player_turn
-  when 'stay' || 's'
-    prompt("You've chosen to stay. The dealer will make their moves now.")
-    break
-  when 'hit' || 'h'
-    deal_another_card(player_cards, deck)
-    player_cards_value = get_card_values(player_cards)
-    show_cards(player_cards)
-    change_ace_value(player_cards_value)
-    display_card_total(player_cards_value)
-    if bust?(player_cards_value)
-      card_status[user] = 'Bust'
-      prompt("You've busted and gone over 21. It's the dealer's turn now.")
-      break
-    end
+
+  prompt("Welcome to #{WINNING_VALUE}!")
+  prompt("The player closest to #{WINNING_VALUE} without going over wins.")
+  prompt("First player to win #{WINNING_GAMES} games wins the match.")
+  sleep(3)
+  clear
+
+  loop do
+    player_total = 0
+    dealer_total = 0
+
+    deck = INITIAL_DECK
+    player_cards, dealer_cards = deal_cards(deck)
+
+    prompt("One of the dealer's cards is #{dealer_cards[0]}.")
+    prompt("You get to go first.")
+    sleep(2)
+    clear
+
+    # Player's move
+    turn = 'Player'
+    player_total = process_moves(player_cards, turn)
     player_turn = ask_player_turn
+
+    loop do
+      clear
+      case player_turn
+      when 'stay', 's'
+        prompt("You've chosen to stay.")
+        break
+      when 'hit', 'h'
+        deal_another_card(player_cards, deck)
+        player_total = process_moves(player_cards, turn)
+        if bust?(player_total)
+          prompt("You've busted and gone over #{WINNING_VALUE}!")
+          break
+        end
+        player_turn = ask_player_turn
+      end
+    end
+    sleep(1.5)
+    clear
+
+    if bust?(player_total)
+      dealer_total = store_card_values(dealer_cards).sum
+      process_end_game(player_cards, player_total, dealer_cards,
+                       dealer_total, score)
+      break if score[:Player] >= WINNING_GAMES ||
+               score[:Dealer] >= WINNING_GAMES
+      next
+    end
+
+    # Dealer's move
+    turn = 'Dealer'
+    prompt("It's the dealer's turn now.")
+    prompt("Dealer is making their moves....")
+    sleep(1.5)
+
+    dealer_total = process_moves(dealer_cards, turn)
+    loop do
+      if bust?(dealer_total)
+        prompt("The dealer busted and went over #{WINNING_VALUE}!")
+        break
+      end
+      break if dealer_total >= DEALER_HITS
+      deal_another_card(dealer_cards, deck)
+      dealer_total = process_moves(dealer_cards, turn)
+    end
+    sleep(2)
+
+    process_end_game(player_cards, player_total, dealer_cards,
+                     dealer_total, score)
+    break if score[:Player] >= WINNING_GAMES || score[:Dealer] >= WINNING_GAMES
   end
+  prompt("You won the match! Great job!") if score[:Player] >= WINNING_GAMES
+  prompt("You lost the match! Too bad!") if score[:Dealer] >= WINNING_GAMES
+
+  break if ask_play_again.start_with?('n')
 end
-
-total_player_cards = calculate_card_total(player_cards_value)
-distance_from_twenty_one(total_player_cards, user, card_status)
-sleep(3)
-clear
-
-# Dealer's move
-prompt("Dealer is making their moves....")
-sleep(3)
-user = 'Dealer'
-dealer_cards_value = get_card_values(dealer_cards)
-loop do
-  if bust?(dealer_cards_value)
-    card_status[user] = 'Bust'
-    prompt("The dealer busted!")
-    break
-  end
-  break if dealer_hits?(dealer_cards_value)
-  deal_another_card(dealer_cards, deck)
-  change_ace_value(dealer_cards_value)
-  dealer_cards_value = get_card_values(dealer_cards)
-end
-
-total_dealer_cards = calculate_card_total(dealer_cards_value)
-distance_from_twenty_one(total_dealer_cards, user, card_status)
-sleep(3)
-
-clear
-prompt("Final Results:")
-prompt("Player's cards & total are: ")
-display_final_results(player_cards, player_cards_value)
-prompt("Dealer's cards & total are:")
-display_final_results(dealer_cards, dealer_cards_value)
-display_winner(card_status)
