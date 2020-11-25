@@ -1,5 +1,5 @@
 SUITS = %w(Clubs Diamonds Hearts Spades)
-VALUES = (2..10).to_a + ['Jack', 'Queen', 'King', 'Ace']
+VALUES = ('2'..'10').to_a + ['Jack', 'Queen', 'King', 'Ace']
 WINNING_VALUE = 21
 DEALER_HITS = 17
 WINNING_GAMES = 5
