@@ -13,7 +13,6 @@ INITIAL_DECK = [['C', '2'], ['C', '3'], ['C', '4'], ['C', '5'], ['C', '6'],
 WINNING_VALUE = 21
 DEALER_HITS = 17
 WINNING_GAMES = 5
-POSSIBLE_MOVES = %w(hit stay h s)
 
 def clear
   system('clear') || system('clr')
@@ -50,7 +49,7 @@ def ask_player_turn
 end
 
 def valid_player_move?(move)
-  POSSIBLE_MOVES.include?(move)
+  %w(hit stay h s).include?(move)
 end
 
 def deal_another_card(cards, deck)
